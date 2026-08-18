@@ -11,7 +11,7 @@ class Category extends Model
 
     protected $fillable = [
         'name',
-        'description'
+        'description',
     ];
 
     // 1. Tell Laravel to always send our "fake" column to React
@@ -30,7 +30,7 @@ class Category extends Model
 
     public function image()
     {
-        return $this->morphOne(\App\Models\File::class, 'fileable')->latestOfMany();
+        return $this->morphOne(File::class, 'fileable')->latestOfMany();
     }
 
     /*
@@ -43,9 +43,9 @@ class Category extends Model
     public function getImageUrlAttribute()
     {
         if ($this->image) {
-            return asset('storage/' . $this->image->file_path);
+            return asset('storage/'.$this->image->file_path);
         }
-        
+
         return null;
     }
 }

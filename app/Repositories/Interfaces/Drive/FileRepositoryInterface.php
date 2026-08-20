@@ -2,10 +2,9 @@
 
 namespace App\Repositories\Interfaces\Drive;
 
+use App\Models\File;
+
 interface FileRepositoryInterface
 {
-    /**
-     * Create a new file record in the database.
-     */
-    public function create(array $data);
+    public function create(array $data): File;
 }

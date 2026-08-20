@@ -2,15 +2,20 @@
 
 namespace App\Services\Auth;
 
+use App\Models\User;
 use App\Repositories\Interfaces\Auth\UserRepositoryInterface;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class AuthService
 {
     public function __construct(protected UserRepositoryInterface $userRepository) {}
+
+    public function getCurrentUserProfile(User $user): User
+    {
+        return $user->load(['profilePicture', 'institutionProfile.logo']);
+    }
 
     public function register(array $data): array
     {
@@ -27,16 +32,16 @@ class AuthService
     public function login(array $credentials): array
     {
         // 1. Attempt to log in. If it fails, it returns false.
-        if (!$token = Auth::guard('api')->attempt($credentials)) {
+        if (! $token = Auth::guard('api')->attempt($credentials)) {
             // Throw an error that the Controller will catch
             throw ValidationException::withMessages([
                 'email' => ['Invalid credentials provided.'],
             ]);
-        };
+        }
 
         // 2. If successful, return the user and the new token
         return [
-            'user'  => Auth::guard('api')->user(),
+            'user' => Auth::guard('api')->user(),
             'token' => $token,
         ];
     }
@@ -63,7 +68,7 @@ class AuthService
         if ($status !== Password::RESET_LINK_SENT) {
             // Syntax: __($status) translates the error string into a readable message.
             throw ValidationException::withMessages([
-                'email' => [__($status)]
+                'email' => [__($status)],
             ]);
         }
 
@@ -76,7 +81,7 @@ class AuthService
         // If the token matches, it runs the "function ($user, $password)" closure.
         $status = Password::reset($data, function ($user, $password) {
 
-            // Syntax: Assign the new password. 
+            // Syntax: Assign the new password.
             // Because we added 'password' => 'hashed' to our Model casts, Laravel hashes this automatically!
             $user->password = $password;
             $user->save();
@@ -89,7 +94,13 @@ class AuthService
             ]);
         }
 
-
         return __($status);
+    }
+
+    public function updateUserProfile(User $user, array $data): User
+    {
+        $this->userRepository->updateUserProfile($user, $data);
+
+        return $user->refresh()->load(['profilePicture', 'institutionProfile.logo']);
     }
 }

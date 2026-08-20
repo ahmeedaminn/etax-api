@@ -4,13 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 class File extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['file_path', 'fileable_id', 'fileable_type', 'user_id', 'file_name'];
+    protected $fillable = [
+        'file_path',
+        'fileable_id',
+        'fileable_type',
+        'user_id',
+        'file_name',
+        'mime_type',
+        'size_in_kb',
+    ];
 
     // 1. Tell Laravel to automatically append our custom 'url' attribute
     protected $appends = ['url'];
@@ -19,10 +26,10 @@ class File extends Model
     public function getUrlAttribute()
     {
         // If you used the 'public' disk to save the file:
-        return asset('storage/' . $this->file_path);
-        
+        return asset('storage/'.$this->file_path);
+
         // OR, if you saved it directly into the public/uploads folder:
-        // return asset($this->file_path); 
+        // return asset($this->file_path);
     }
 
     // ... your morphTo relationship ...

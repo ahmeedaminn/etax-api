@@ -3,84 +3,58 @@
 namespace App\Http\Controllers\Drive;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Services\Drive\FileService;
 use App\Http\Requests\Drive\StoreFileRequest;
+use App\Services\Drive\FileService;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class FileController extends Controller
 {
-    protected $fileService;
+    public function __construct(protected FileService $fileService) {}
 
-    public function __construct(FileService $fileService)
+    public function index(): JsonResponse
     {
-        $this->fileService = $fileService;
+        $files = $this->fileService->getUserFiles(Auth::id());
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $files,
+        ]);
     }
 
-    // Fetch all files for the logged-in user
-    public function index()
+    public function store(StoreFileRequest $request): JsonResponse
     {
-        try {
-            $files = $this->fileService->getUserFiles(Auth::id());
+        $validated = $request->validated();
+        $fileableType = $validated['fileable_type'];
 
-            return response()->json([
-                'status' => 'success',
-                'data'   => $files
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Failed to fetch files.',
-                'error'   => $e->getMessage()
-            ], 500);
-        }
+        /** @var Model $fileable */
+        $fileable = $fileableType::query()->findOrFail($validated['fileable_id']);
+
+        // The target arrives in the request body, so authorize it after resolution.
+        Gate::authorize('attachFile', $fileable);
+
+        $fileRecord = $this->fileService->upload(
+            $request->file('file'),
+            $request->user(),
+            $fileable,
+        );
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'File uploaded and attached successfully.',
+            'data' => $fileRecord,
+        ], 201);
     }
 
-    public function store(StoreFileRequest $request)
+    public function destroy(int $id): JsonResponse
     {
-        try {
-            // 1. Validate the file and ensure the morph targets are provided
-            $request->validated();
+        $this->fileService->deleteFile($id, Auth::id());
 
-            // 2. Delegate to the service layer
-            $fileRecord = $this->fileService->upload(
-                $request->file('file'),
-                Auth::id(), // Safely grab the logged-in user's ID
-                $request->fileable_id,
-                $request->fileable_type
-            );
-
-            // 3. Return a clean JSON response
-            return response()->json([
-                'status'  => 'success',
-                'message' => 'File uploaded and attached successfully.',
-                'data'    => $fileRecord
-            ], 201);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Failed to upload file.',
-                'error'   => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    // Delete a specific file
-    public function destroy($id)
-    {
-        try {
-            $this->fileService->deleteFile($id, Auth::id());
-
-            return response()->json([
-                'status'  => 'success',
-                'message' => 'File deleted permanently.'
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Failed to delete file.',
-                'error'   => $e->getMessage()
-            ], 500);
-        }
+        return response()->json([
+            'status' => 'success',
+            'message' => 'File deleted permanently.',
+        ]);
     }
 }

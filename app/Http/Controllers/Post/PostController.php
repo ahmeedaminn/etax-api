@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Post;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Services\Post\PostService;
+use App\Http\Requests\Post\ListPostsRequest;
 use App\Http\Requests\Post\StorePostRequest;
+use App\Http\Requests\Post\UpdatePostRequest;
+use App\Models\Category;
+use App\Models\Post;
+use App\Models\User;
+use App\Services\Post\PostService;
 use Illuminate\Http\JsonResponse;
 
 class PostController extends Controller
@@ -18,64 +21,84 @@ class PostController extends Controller
         $this->postService = $postService;
     }
 
-    // NEW: Fetch all posts for a specific category
-    public function index($categoryId): JsonResponse
+    public function index(Category $category): JsonResponse
     {
-        try {
-            $posts = $this->postService->getPostsByCategory($categoryId);
+        $posts = $this->postService->getPostsByCategory($category->id);
 
-            return response()->json([
-                'status' => 'success',
-                'data'   => $posts
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
-        }
+        return response()->json([
+            'status' => 'success',
+            'data' => $posts,
+        ]);
     }
 
-    public function show($postId): JsonResponse
+    public function feed(ListPostsRequest $request): JsonResponse
     {
-        try {
-            $post = $this->postService->getPostById($postId);
+        $sort = $request->validated('sort', 'latest');
 
-            return response()->json([
-                'status' => 'success',
-                'data'   => $post
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
-        }
+        return response()->json([
+            'status' => 'success',
+            'data' => $this->postService->getAllPosts($sort),
+        ]);
     }
 
-    public function store(StorePostRequest $request, $categoryId): JsonResponse
+    public function institutionPosts(User $institution): JsonResponse
     {
+        $posts = $this->postService->getPostsByInstitution(
+            $institution->id
+        );
 
-        try {
+        return response()->json([
+            'status' => 'success',
+            'data' => $posts,
+        ]);
+    }
 
-            $validatedData = $request->validated();
+    public function show(Category $category, Post $post): JsonResponse
+    {
+        $post = $this->postService->getPostById($post->id);
 
-            // 2. Automatically attach the ID of the currently logged-in user
-            $validatedData['user_id'] = Auth::id();
+        return response()->json([
+            'status' => 'success',
+            'data' => $post,
+        ]);
+    }
 
-            // 3. Automatically attach the category ID from the URL!
-            // (This prevents users from tampering with the category_id in the JSON body)
-            $validatedData['category_id'] = $categoryId;
+    public function store(StorePostRequest $request, Category $category): JsonResponse
+    {
+        $validatedData = $request->validated();
 
-            // 4. Pass data to the service layer
-            $post = $this->postService->createPost($validatedData);
+        $post = $this->postService->createPost($request->user(), $category, $validatedData);
 
-            // 5. Return success response
-            return response()->json([
-                'status'  => 'success',
-                'message' => 'Post created successfully.',
-                'data'    => $post
-            ], 201);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Failed to create post.',
-                'error'   => $e->getMessage()
-            ], 500);
-        }
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Post created successfully.',
+            'data' => $post,
+        ], 201);
+    }
+
+    public function update(
+        UpdatePostRequest $request,
+        Category $category,
+        Post $post,
+    ): JsonResponse {
+        $validatedData = $request->validated();
+
+        $updatedPost = $this->postService->updatePost($post, $validatedData);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Post updated successfully.',
+            'data' => $updatedPost,
+        ]);
+    }
+
+    public function destroy(Category $category, Post $post): JsonResponse
+    {
+        $this->postService->deletePost($post);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Post deleted successfully.',
+        ]);
     }
 }

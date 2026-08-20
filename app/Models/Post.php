@@ -2,41 +2,88 @@
 
 namespace App\Models;
 
+use App\Enums\PostType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Post extends Model
 {
     use HasFactory;
 
-    // 1. Mass Assignment Protection
+    protected $appends = ['content'];
+
     protected $fillable = [
+        'institution_id',
         'user_id',
         'category_id',
+        'type',
         'title',
-        'content'
+        'description',
+        'content',
+        'start_at',
+        'end_at',
+        'location',
+        'capacity',
     ];
 
-    /*
-    |--------------------------------------------------------------------------
-    | RELATIONSHIPS
-    |--------------------------------------------------------------------------
-    */
-
-    // 2. Who wrote this post?
-    public function user()
+    protected function casts(): array
     {
-        return $this->belongsTo(User::class);
+        return [
+            'type' => PostType::class,
+            'start_at' => 'datetime',
+            'end_at' => 'datetime',
+            'capacity' => 'integer',
+        ];
     }
 
-    // 3. Which folder/category does this post live in?
-    public function category()
+    public function setUserIdAttribute(int $userId): void
+    {
+        // Temporary compatibility for the old API payload name.
+        $this->attributes['institution_id'] = $userId;
+    }
+
+    public function setContentAttribute(?string $content): void
+    {
+        // Temporary compatibility for the old API payload name.
+        $this->attributes['description'] = $content;
+    }
+
+    public function getContentAttribute(): ?string
+    {
+        return $this->attributes['description'] ?? null;
+    }
+
+    public function institution(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'institution_id');
+    }
+
+    public function user(): BelongsTo
+    {
+        // Temporary relationship alias used by the existing React responses.
+        return $this->institution();
+    }
+
+    public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
     }
 
-    // 4. THE POLYMORPHIC MAGIC: What files are attached to this post?
-    public function files()
+    public function eventParticipations(): HasMany
+    {
+        return $this->hasMany(EventParticipation::class);
+    }
+
+    public function savedByUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'saved_posts')->withTimestamps();
+    }
+
+    public function files(): MorphMany
     {
         return $this->morphMany(File::class, 'fileable');
     }

@@ -2,15 +2,13 @@
 
 namespace App\Repositories\Eloquent\Drive;
 
-use App\Repositories\Interfaces\Drive\FileRepositoryInterface;
 use App\Models\File;
+use App\Repositories\Interfaces\Drive\FileRepositoryInterface;
 
 class FileRepository implements FileRepositoryInterface
 {
-    public function create(array $data)
+    public function create(array $data): File
     {
-        // This is the ONLY place in the entire Drive domain 
-        // that actually talks to the database.
         return File::create($data);
     }
 }

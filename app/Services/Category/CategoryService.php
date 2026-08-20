@@ -1,36 +1,48 @@
 <?php
 
 namespace App\Services\Category;
-use App\Models\Category; // <--- Add this line right here!
+
+use App\Models\Category;
 use App\Repositories\Interfaces\Category\CategoryRepositoryInterface;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class CategoryService
 {
-    protected $categoryRepository;
+    public function __construct(
+        protected CategoryRepositoryInterface $categoryRepository,
+    ) {}
 
-    // DEPENDENCY INJECTION: We inject the Repository Interface here!
-    public function __construct(CategoryRepositoryInterface $categoryRepository)
+    public function getAllCategories(): Collection
     {
-        $this->categoryRepository = $categoryRepository;
+        return $this->categoryRepository->all();
     }
 
-    public function createCategory(array $data)
+    public function getCategoryById(int $id): Category
     {
-        // Here is where you could add extra logic later (e.g., slugifying the name)
+        $category = $this->categoryRepository->findById($id);
+
+        if (! $category) {
+            throw (new ModelNotFoundException)->setModel(Category::class, [$id]);
+        }
+
+        return $category;
+    }
+
+    public function createCategory(array $data): Category
+    {
         return $this->categoryRepository->create($data);
     }
 
-    // NEW: Get all categories for the React Dashboard
-    public function getAllCategories()
+    public function updateCategory(Category $category, array $data): Category
     {
-        // @TODO: Refactor to $this->categoryRepository->getAll() later
-        return Category::latest()->get(); 
+        $this->categoryRepository->update($category, $data);
+
+        return $category->refresh();
     }
 
-    // NEW: Get a single category by its ID
-    public function getCategoryById($id)
+    public function deleteCategory(Category $category): bool
     {
-        // @TODO: Refactor to $this->categoryRepository->findById($id) later
-        return Category::findOrFail($id);
+        return $this->categoryRepository->delete($category);
     }
 }

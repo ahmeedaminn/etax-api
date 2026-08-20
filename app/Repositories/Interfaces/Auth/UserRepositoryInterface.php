@@ -1,15 +1,29 @@
-<?php 
+<?php
 
 namespace App\Repositories\Interfaces\Auth;
 
+use App\Enums\InstitutionRequestStatus;
+use App\Enums\UserRole;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 
-interface UserRepositoryInterface 
+interface UserRepositoryInterface
 {
-    // : User -> means that this function will return class from type User (Models/User)
     public function create(array $data): User;
-    public function findByEmail(string $email): ?User;
-    public function findById(int $id): ?User;
-    public function updatePassword(User $user, string $newPassword): bool;
-}
 
+    public function findByEmail(string $email): ?User;
+
+    public function findById(int $id): ?User;
+
+    public function updatePassword(User $user, string $newPassword): bool;
+
+    public function updateUserProfile(User $user, array $data): bool;
+
+    public function getPendingInstitutionApplications(): Collection;
+
+    public function updateRoleAndRequestStatus(
+        User $user,
+        UserRole $role,
+        InstitutionRequestStatus $requestStatus,
+    ): bool;
+}

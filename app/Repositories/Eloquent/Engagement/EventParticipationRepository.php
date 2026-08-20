@@ -25,6 +25,7 @@ class EventParticipationRepository implements EventParticipationRepositoryInterf
             ->delete() > 0;
     }
 
+    // this method retrieves all event participations for a specific user, including related post, institution, and category data, ordered by the most recent participation.
     public function forUser(int $userId): Collection
     {
         return EventParticipation::query()

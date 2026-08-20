@@ -19,7 +19,9 @@ return new class extends Migration
 
         Schema::table('posts', function (Blueprint $table) {
             $table->foreign('institution_id')->references('id')->on('users')->cascadeOnDelete();
+            // Existing generic posts remain valid as Announcements after migration.
             $table->string('type')->default('ANNOUNCEMENT')->index()->after('category_id');
+            // Event fields stay nullable because Announcements do not use them.
             $table->timestamp('start_at')->nullable()->after('description');
             $table->timestamp('end_at')->nullable()->after('start_at');
             $table->string('location')->nullable()->after('end_at');

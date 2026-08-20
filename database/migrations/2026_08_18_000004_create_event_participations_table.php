@@ -15,6 +15,7 @@ return new class extends Migration
             $table->string('status');
             $table->timestamps();
 
+            // A user changes one participation state instead of creating duplicates.
             $table->unique(['user_id', 'post_id']);
             $table->index(['post_id', 'status']);
         });

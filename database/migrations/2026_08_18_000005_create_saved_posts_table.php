@@ -13,6 +13,7 @@ return new class extends Migration
             $table->foreignId('post_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
 
+            // The composite key prevents the same user from saving a post twice.
             $table->primary(['user_id', 'post_id']);
         });
     }

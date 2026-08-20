@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Collection;
 
 interface PostRepositoryInterface
 {
+    public function all(string $sort = 'latest'): Collection;
+
     public function findById(int $id): ?Post;
 
     public function forCategory(int $categoryId): Collection;

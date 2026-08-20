@@ -42,11 +42,13 @@ class Post extends Model
 
     public function setUserIdAttribute(int $userId): void
     {
+        // Temporary compatibility for the old API payload name.
         $this->attributes['institution_id'] = $userId;
     }
 
     public function setContentAttribute(?string $content): void
     {
+        // Temporary compatibility for the old API payload name.
         $this->attributes['description'] = $content;
     }
 
@@ -62,6 +64,7 @@ class Post extends Model
 
     public function user(): BelongsTo
     {
+        // Temporary relationship alias used by the existing React responses.
         return $this->institution();
     }
 

@@ -10,12 +10,17 @@ class CategoryRepository implements CategoryRepositoryInterface
 {
     public function all(): Collection
     {
-        return Category::query()->orderBy('name')->get();
+        return Category::query()
+            ->with('image')
+            ->orderBy('name')
+            ->get();
     }
 
     public function findById(int $id): ?Category
     {
-        return Category::find($id);
+        return Category::query()
+            ->with('image')
+            ->find($id);
     }
 
     public function create(array $data): Category

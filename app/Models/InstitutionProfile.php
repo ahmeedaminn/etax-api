@@ -29,6 +29,7 @@ class InstitutionProfile extends Model
 
     public function posts(): HasMany
     {
+        // Posts reference the institution's user account, not this profile ID.
         return $this->hasMany(Post::class, 'institution_id', 'user_id');
     }
 

@@ -9,6 +9,7 @@ use App\Repositories\Eloquent\Engagement\EventParticipationRepository;
 use App\Repositories\Eloquent\Engagement\SavedPostRepository;
 use App\Repositories\Eloquent\Institution\InstitutionProfileRepository;
 use App\Repositories\Eloquent\Post\PostRepository;
+use App\Repositories\Eloquent\Statistics\StatisticsRepository;
 use App\Repositories\Interfaces\Auth\UserRepositoryInterface;
 use App\Repositories\Interfaces\Category\CategoryRepositoryInterface;
 use App\Repositories\Interfaces\Drive\FileRepositoryInterface;
@@ -16,6 +17,7 @@ use App\Repositories\Interfaces\Engagement\EventParticipationRepositoryInterface
 use App\Repositories\Interfaces\Engagement\SavedPostRepositoryInterface;
 use App\Repositories\Interfaces\Institution\InstitutionProfileRepositoryInterface;
 use App\Repositories\Interfaces\Post\PostRepositoryInterface;
+use App\Repositories\Interfaces\Statistics\StatisticsRepositoryInterface;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\ServiceProvider;
 
@@ -39,6 +41,7 @@ class AppServiceProvider extends ServiceProvider
             EventParticipationRepository::class,
         );
         $this->app->bind(SavedPostRepositoryInterface::class, SavedPostRepository::class);
+        $this->app->bind(StatisticsRepositoryInterface::class, StatisticsRepository::class);
     }
 
     /**

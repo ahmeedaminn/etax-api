@@ -2,29 +2,63 @@
 
 namespace App\Http\Requests\Post;
 
-use Illuminate\Contracts\Validation\ValidationRule;
+use App\Enums\PostType;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StorePostRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            'title'       => 'required|string|max:255',
-            'content'     => 'nullable|string',
+            'type' => [
+                'required',
+                Rule::enum(PostType::class),
+            ],
+
+            'title' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'description' => [
+                'required',
+                'string',
+            ],
+
+            'start_at' => [
+                // Announcement payloads do not keep Event-only fields.
+                'exclude_unless:type,EVENT',
+                'required',
+                'date',
+            ],
+
+            'end_at' => [
+                'exclude_unless:type,EVENT',
+                'required',
+                'date',
+                'after:start_at',
+            ],
+
+            'location' => [
+                'exclude_unless:type,EVENT',
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'capacity' => [
+                'exclude_unless:type,EVENT',
+                'nullable',
+                'integer',
+                'min:1',
+            ],
         ];
     }
 }

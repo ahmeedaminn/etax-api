@@ -9,7 +9,15 @@ class File extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['file_path', 'fileable_id', 'fileable_type', 'user_id', 'file_name'];
+    protected $fillable = [
+        'file_path',
+        'fileable_id',
+        'fileable_type',
+        'user_id',
+        'file_name',
+        'mime_type',
+        'size_in_kb',
+    ];
 
     // 1. Tell Laravel to automatically append our custom 'url' attribute
     protected $appends = ['url'];
